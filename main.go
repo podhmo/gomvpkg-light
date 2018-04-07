@@ -24,6 +24,7 @@ type option struct {
 	fromPkg string
 	toPkg   string
 	inPkg   string
+	only    bool
 }
 
 func main() {
@@ -33,12 +34,15 @@ func main() {
 	cmd.Flag("from", "Import path of package to be moved").Required().StringVar(&option.fromPkg)
 	cmd.Flag("to", "Destination import path for package").StringVar(&option.toPkg)
 	cmd.Flag("in", "target area").StringVar(&option.inPkg)
-
+	cmd.Flag("only", "from package only moved(sub packages are not moved)").BoolVar(&option.only)
 	if _, err := cmd.Parse(os.Args[1:]); err != nil {
 		cmd.FatalUsage(err.Error())
 	}
 
-	ctxt := build.Default()
+	ctxt := build.Recursively()
+	if option.only {
+		ctxt = build.OnePackageOnly()
+	}
 
 	if err := run(ctxt, &option); err != nil {
 		log.Fatalf("gomvpkg-light: %+v.\n", err)
