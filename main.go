@@ -82,6 +82,7 @@ func run(ctxt *build.Context, option *option) error {
 		ParserMode: parser.ParseComments,
 	}
 
+	c.ImportWithTests(option.fromPkg)
 	for _, a := range affected {
 		c.ImportWithTests(a.Pkg)
 	}

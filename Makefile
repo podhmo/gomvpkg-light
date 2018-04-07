@@ -1,3 +1,5 @@
+PKG = github.com/podhmo/handwriting
+
 default:
 	go install -v .
-	gomvpkg-light --from github.com/podhmo/handwriting/multifile --to github.com/podhmo/handwriting/multifile2 --in github.com/podhmo/handwriting
+	gomvpkg-light --from $(PKG)/generator/deriving --to $(PKG)/deriving2 --in $(PKG)
