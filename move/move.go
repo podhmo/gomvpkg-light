@@ -149,10 +149,11 @@ func (m *mover) apply(a *collect.Affected) error {
 		if !skip {
 			ast.Inspect(f, func(node ast.Node) bool {
 				if t, _ := node.(*ast.SelectorExpr); t != nil {
-					if m.frompkg == info.ObjectOf(t.Sel).Pkg() {
+					pkg := info.ObjectOf(t.Sel).Pkg()
+					if m.frompkg == pkg || info.Pkg == pkg { // xxx: for embeded (info.Pkg == pkg)
 						ast.Inspect(t.X, func(node ast.Node) bool {
 							if ident, _ := node.(*ast.Ident); ident != nil {
-								if ident.Name == importName {
+								if ident.Name == importName && ident.Obj == nil {
 									ident.Name = m.topkg.Name()
 								}
 							}
