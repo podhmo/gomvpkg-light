@@ -4,15 +4,18 @@ import (
 	"go/build"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"golang.org/x/tools/go/buildutil"
 )
 
 // Default :
 func Default() *Context {
-	return &Context{
+	var c *Context
+	c = &Context{
 		Ctxt: &build.Default,
 		WriteFile: func(path string, b []byte) error {
 			return ioutil.WriteFile(path, b, 0744)
@@ -24,9 +27,23 @@ func Default() *Context {
 			if err := os.Chdir(src); err != nil {
 				return err
 			}
-			return exec.Command("git", "mv", src, dst).Run()
+			fs, err := c.ReadDir(src)
+			if err != nil {
+				return err
+			}
+			c.MkdirAll(dst)
+			for _, f := range fs {
+				if strings.HasSuffix(f.Name(), ".go") {
+					log.Println("git", "mv", c.JoinPath(src, f.Name()), c.JoinPath(dst, f.Name()))
+					if err := exec.Command("git", "mv", c.JoinPath(src, f.Name()), c.JoinPath(dst, f.Name())).Run(); err != nil {
+						return err
+					}
+				}
+			}
+			return nil
 		},
 	}
+	return c
 }
 
 // Context :
