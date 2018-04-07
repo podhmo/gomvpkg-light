@@ -46,23 +46,30 @@ func main() {
 }
 
 func run(ctxt *build.Context, option *option) error {
+	log.Printf("start move package %s -> %s", option.fromPkg, option.toPkg)
 	st := time.Now()
-	defer log.Printf("takes %v", time.Now().Sub(st))
+	defer func() {
+		log.Printf("takes %v", time.Now().Sub(st))
+		log.Println("end")
+	}()
 
 	root, err := collect.TargetRoot(ctxt, option.inPkg)
 	if err != nil {
 		return err
 	}
+	log.Printf("get in-pkg %s", root.Path)
 
 	pkgdirs, err := collect.GoFilesDirectories(ctxt, root)
 	if err != nil {
 		return err
 	}
+	log.Printf("collect candidate directories %d", len(pkgdirs))
 
 	affected, err := collect.AffectedPackages(ctxt, option.fromPkg, root, pkgdirs)
 	if err != nil {
 		return err
 	}
+	log.Printf("collect affected packages %d", len(affected))
 
 	// slow
 	c := loader.Config{
@@ -83,7 +90,6 @@ func run(ctxt *build.Context, option *option) error {
 	if err != nil {
 		return err
 	}
-	log.Println(len(prog.AllPackages))
 
 	req := &move.Req{
 		FromPkg:     option.fromPkg,
@@ -128,6 +134,7 @@ func run(ctxt *build.Context, option *option) error {
 		if err := ctxt.WriteFile(f.Name(), b.Bytes()); err != nil {
 			return err
 		}
+		log.Printf("write file %s", f.Name())
 	}
 
 	if dsttarget.NeedCreate {
@@ -135,6 +142,8 @@ func run(ctxt *build.Context, option *option) error {
 			return err
 		}
 	}
+
+	log.Printf("move package %s -> %s", srctarget.Pkg, dsttarget.Pkg)
 	if err := ctxt.MoveFile(srctarget.Path, dsttarget.Path); err != nil {
 		return err
 	}
