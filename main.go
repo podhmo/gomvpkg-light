@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -12,63 +11,40 @@ import (
 	"github.com/podhmo/gomvpkg-light/collect"
 	"github.com/podhmo/gomvpkg-light/move"
 	"golang.org/x/tools/go/loader"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-var (
-	fromFlag = flag.String("from", "", "Import path of package to be moved")
-	toFlag   = flag.String("to", "", "Destination import path for package")
-	inFlag   = flag.String("in", "", "target area")
-	helpFlag = flag.Bool("help", false, "show usage message")
-)
-
-const Usage = `gomvpkg-light: moves a package, updating import declarations
-
-Usage:
-
- gomvpkg-light -from <path> -to <path> -in <path>
-
-Flags:
-
--from        specifies the import path of the package to be moved
-
--to          specifies the destination import path
-
--in         specifies the target area of replacing
-
-Examples:
-
-% gomvpkg-light -from myproject/foo -to myproject/bar
-
-  Move the package with import path "myproject/foo" to the new path
-  "myproject/bar".
-`
+type option struct {
+	fromPkg string
+	toPkg   string
+	inPkg   string
+}
 
 func main() {
-	flag.Parse()
+	var option option
+	cmd := kingpin.New("gomvpkg-light", "gomvpkg-light")
 
-	if len(flag.Args()) > 0 {
-		fmt.Fprintln(os.Stderr, "gomvpkg-light: surplus arguments.")
-		os.Exit(1)
-	}
+	cmd.Flag("from", "Import path of package to be moved").Required().StringVar(&option.fromPkg)
+	cmd.Flag("to", "Destination import path for package").StringVar(&option.toPkg)
+	cmd.Flag("in", "target area").StringVar(&option.inPkg)
 
-	if *helpFlag || *fromFlag == "" || *toFlag == "" || *inFlag == "" {
-		fmt.Println(Usage)
-		return
+	if _, err := cmd.Parse(os.Args[1:]); err != nil {
+		cmd.FatalUsage(err.Error())
 	}
 
 	ctxt := build.Default()
 
-	if err := run(ctxt, *fromFlag, *toFlag, *inFlag); err != nil {
+	if err := run(ctxt, &option); err != nil {
 		fmt.Fprintf(os.Stderr, "gomvpkg-light: %+v.\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctxt *build.Context, fromPkg, toPkg, inPkg string) error {
+func run(ctxt *build.Context, option *option) error {
 	st := time.Now()
 	defer fmt.Fprintln(os.Stderr, time.Now().Sub(st))
 
-	root, err := collect.TargetRoot(ctxt, inPkg)
+	root, err := collect.TargetRoot(ctxt, option.inPkg)
 	if err != nil {
 		return err
 	}
@@ -78,7 +54,7 @@ func run(ctxt *build.Context, fromPkg, toPkg, inPkg string) error {
 		return err
 	}
 
-	affected, err := collect.AffectedPackages(ctxt, fromPkg, root, pkgdirs)
+	affected, err := collect.AffectedPackages(ctxt, option.fromPkg, root, pkgdirs)
 	if err != nil {
 		return err
 	}
@@ -104,9 +80,9 @@ func run(ctxt *build.Context, fromPkg, toPkg, inPkg string) error {
 	log.Println(len(prog.AllPackages))
 
 	req := &move.Req{
-		FromPkg:  fromPkg,
-		ToPkg:    toPkg,
-		InPkg:    inPkg,
+		FromPkg:  option.fromPkg,
+		ToPkg:    option.toPkg,
+		InPkg:    option.inPkg,
 		Root:     root,
 		Affected: affected,
 	}
