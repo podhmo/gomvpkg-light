@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"go/printer"
 	"go/token"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/podhmo/gomvpkg-light/build"
 	"github.com/podhmo/gomvpkg-light/collect"
 	"github.com/podhmo/gomvpkg-light/move"
@@ -43,7 +47,7 @@ func main() {
 
 func run(ctxt *build.Context, option *option) error {
 	st := time.Now()
-	defer fmt.Fprintln(os.Stderr, time.Now().Sub(st))
+	defer log.Printf("takes %v", time.Now().Sub(st))
 
 	root, err := collect.TargetRoot(ctxt, option.inPkg)
 	if err != nil {
@@ -98,9 +102,50 @@ func run(ctxt *build.Context, option *option) error {
 		return err
 	}
 
-	for f := range req.WillBeWrite {
-		fmt.Println(f.Name())
+	srctarget, err := collect.TargetRoot(ctxt, option.fromPkg)
+	if err != nil {
+		return errors.Errorf("invalid source %s", option.fromPkg)
 	}
+	dsttarget, err := collect.TargetRoot(ctxt, option.toPkg)
+	if err != nil {
+		dsttarget = &collect.Target{
+			Dir:        srctarget.Dir,
+			Pkg:        option.toPkg,
+			Path:       ctxt.JoinPath(srctarget.Dir, option.toPkg),
+			NeedCreate: true,
+		}
+	}
+
+	pp := &printer.Config{Tabwidth: 8, Mode: printer.UseSpaces | printer.TabIndent}
+
+	for f, pw := range req.WillBeWrite {
+		var b bytes.Buffer
+		if err := pp.Fprint(&b, prog.Fset, pw.File); err != nil {
+			return err
+		}
+
+		if err := ctxt.WriteFile(f.Name(), b.Bytes()); err != nil {
+			return err
+		}
+	}
+
+	if dsttarget.NeedCreate {
+		if err := ctxt.MkdirAll(filepath.Dir(dsttarget.Path)); err != nil {
+			return err
+		}
+	}
+	if err := ctxt.MoveFile(srctarget.Path, dsttarget.Path); err != nil {
+		return err
+	}
+
+	// debug
+	// for f, pw := range req.WillBeWrite {
+	// 	fmt.Println("----------------------------------------")
+	// 	fmt.Println(f.Name())
+	// 	fmt.Println("----------------------------------------")
+	// 	pp.Fprint(os.Stdout, prog.Fset, pw.File)
+	// }
+
 	fmt.Println("ok")
 	return nil
 }

@@ -7,9 +7,10 @@ import (
 
 // Target :
 type Target struct {
-	Dir  string
-	Pkg  string
-	Path string // Dir + Pkg
+	Dir        string
+	Pkg        string
+	Path       string // Dir + Pkg
+	NeedCreate bool
 }
 
 // TargetRoot :

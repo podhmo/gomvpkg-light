@@ -3,7 +3,9 @@ package build
 import (
 	"go/build"
 	"io"
+	"io/ioutil"
 	"os"
+	"os/exec"
 
 	"golang.org/x/tools/go/buildutil"
 )
@@ -12,12 +14,24 @@ import (
 func Default() *Context {
 	return &Context{
 		Ctxt: &build.Default,
+		WriteFile: func(path string, b []byte) error {
+			return ioutil.WriteFile(path, b, 0744)
+		},
+		MkdirAll: func(path string) error {
+			return os.MkdirAll(path, 0744)
+		},
+		MoveFile: func(src, dst string) error {
+			return exec.Command("git", "mv", src, dst).Run()
+		},
 	}
 }
 
 // Context :
 type Context struct {
-	Ctxt *build.Context
+	Ctxt      *build.Context
+	WriteFile func(path string, b []byte) error
+	MkdirAll  func(path string) error
+	MoveFile  func(src, dst string) error
 }
 
 // JoinPath :
