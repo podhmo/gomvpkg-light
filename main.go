@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 	"time"
 
@@ -24,7 +25,9 @@ type option struct {
 	fromPkg string
 	toPkg   string
 	inPkg   string
-	only    bool
+
+	only     bool
+	fProfile string
 }
 
 func main() {
@@ -35,8 +38,20 @@ func main() {
 	cmd.Flag("to", "Destination import path for package").StringVar(&option.toPkg)
 	cmd.Flag("in", "target area").StringVar(&option.inPkg)
 	cmd.Flag("only", "from package only moved(sub packages are not moved)").BoolVar(&option.only)
+	cmd.Flag("profile", "profile").StringVar(&option.fProfile)
+
 	if _, err := cmd.Parse(os.Args[1:]); err != nil {
 		cmd.FatalUsage(err.Error())
+	}
+
+	if option.fProfile != "" {
+		f, err := os.Create(option.fProfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
 	}
 
 	ctxt := build.Recursively()
