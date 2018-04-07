@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"go/types"
 	"log"
 	"os"
 	"path/filepath"
@@ -91,6 +91,7 @@ func run(ctxt *build.Context, option *option) error {
 		c.ImportWithTests(a.Pkg)
 	}
 
+	log.Println("loading packages..")
 	prog, err := c.Load()
 	if err != nil {
 		return err
@@ -130,6 +131,7 @@ func run(ctxt *build.Context, option *option) error {
 
 	pp := &printer.Config{Tabwidth: 8, Mode: printer.UseSpaces | printer.TabIndent}
 
+	stat := map[*types.Package]int{}
 	for f, pw := range req.WillBeWrite {
 		var b bytes.Buffer
 		if err := pp.Fprint(&b, prog.Fset, pw.File); err != nil {
@@ -139,7 +141,11 @@ func run(ctxt *build.Context, option *option) error {
 		if err := ctxt.WriteFile(f.Name(), b.Bytes()); err != nil {
 			return err
 		}
-		log.Printf("write file %s", f.Name())
+		// log.Printf("write file %s", f.Name())
+		stat[pw.Pkg]++
+	}
+	for pkg, count := range stat {
+		log.Printf("write %s, files=%d", pkg.Path(), count)
 	}
 
 	if dsttarget.NeedCreate {
@@ -152,15 +158,5 @@ func run(ctxt *build.Context, option *option) error {
 	if err := ctxt.MoveFile(srctarget.Path, dsttarget.Path); err != nil {
 		return err
 	}
-
-	// debug
-	// for f, pw := range req.WillBeWrite {
-	// 	fmt.Println("----------------------------------------")
-	// 	fmt.Println(f.Name())
-	// 	fmt.Println("----------------------------------------")
-	// 	pp.Fprint(os.Stdout, prog.Fset, pw.File)
-	// }
-
-	fmt.Println("ok")
 	return nil
 }
