@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go/token"
 	"log"
 	"os"
 	"strings"
@@ -80,11 +81,12 @@ func run(ctxt *build.Context, option *option) error {
 	log.Println(len(prog.AllPackages))
 
 	req := &move.Req{
-		FromPkg:  option.fromPkg,
-		ToPkg:    option.toPkg,
-		InPkg:    option.inPkg,
-		Root:     root,
-		Affected: affected,
+		FromPkg:     option.fromPkg,
+		ToPkg:       option.toPkg,
+		InPkg:       option.inPkg,
+		Root:        root,
+		Affected:    affected,
+		WillBeWrite: map[*token.File]*move.PreWrite{},
 	}
 
 	// todo: check
@@ -96,6 +98,9 @@ func run(ctxt *build.Context, option *option) error {
 		return err
 	}
 
+	for f := range req.WillBeWrite {
+		fmt.Println(f.Name())
+	}
 	fmt.Println("ok")
 	return nil
 }
