@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"go/parser"
 	"go/printer"
 	"go/token"
 	"log"
@@ -40,8 +41,7 @@ func main() {
 	ctxt := build.Default()
 
 	if err := run(ctxt, &option); err != nil {
-		fmt.Fprintf(os.Stderr, "gomvpkg-light: %+v.\n", err)
-		os.Exit(1)
+		log.Fatalf("gomvpkg-light: %+v.\n", err)
 	}
 }
 
@@ -72,6 +72,7 @@ func run(ctxt *build.Context, option *option) error {
 			}
 			return true
 		},
+		ParserMode: parser.ParseComments,
 	}
 
 	for _, a := range affected {
