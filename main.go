@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"runtime/pprof"
 	"strings"
 	"time"
@@ -26,8 +27,10 @@ type option struct {
 	toPkg   string
 	inPkg   string
 
-	only     bool
-	fProfile string
+	only bool
+
+	fProfile  string
+	disableGC bool
 }
 
 func main() {
@@ -38,10 +41,16 @@ func main() {
 	cmd.Flag("to", "Destination import path for package").StringVar(&option.toPkg)
 	cmd.Flag("in", "target area").StringVar(&option.inPkg)
 	cmd.Flag("only", "from package only moved(sub packages are not moved)").BoolVar(&option.only)
+
 	cmd.Flag("profile", "profile").StringVar(&option.fProfile)
+	cmd.Flag("disable-gc", "disable gc (for speed)").BoolVar(&option.disableGC)
 
 	if _, err := cmd.Parse(os.Args[1:]); err != nil {
 		cmd.FatalUsage(err.Error())
+	}
+
+	if option.disableGC {
+		debug.SetGCPercent(-1)
 	}
 
 	if option.fProfile != "" {
