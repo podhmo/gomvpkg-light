@@ -78,6 +78,9 @@ func run(ctxt *build.Context, option *option) error {
 	// slow
 	c := loader.Config{
 		TypeCheckFuncBodies: func(path string) bool {
+			if !strings.HasPrefix(path, root.Pkg) {
+				return false
+			}
 			if strings.Contains(path, "/vendor/") {
 				return false
 			}
