@@ -71,7 +71,7 @@ func run(ctxt *build.Context, option *option) error {
 	}
 
 	for _, a := range affected {
-		c.Import(a.Pkg)
+		c.ImportWithTests(a.Pkg)
 	}
 
 	prog, err := c.Load()
