@@ -152,7 +152,9 @@ func (m *mover) apply(a *collect.Affected) error {
 					if m.frompkg == info.ObjectOf(t.Sel).Pkg() {
 						ast.Inspect(t.X, func(node ast.Node) bool {
 							if ident, _ := node.(*ast.Ident); ident != nil {
-								ident.Name = m.topkg.Name()
+								if ident.Name == importName {
+									ident.Name = m.topkg.Name()
+								}
 							}
 							return true
 						})
