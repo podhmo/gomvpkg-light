@@ -2,7 +2,6 @@ package move
 
 import (
 	"go/ast"
-	"go/token"
 	"go/types"
 	"log"
 	"path/filepath"
@@ -14,50 +13,6 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/loader"
 )
-
-// Req :
-type Req struct {
-	FromPkg     string
-	ToPkg       string
-	InPkg       string
-	Root        *collect.Target
-	Affected    []collect.Affected
-	WillBeWrite map[*token.File]*PreWrite
-}
-
-// PreWrite :
-type PreWrite struct {
-	Pkg  *types.Package
-	File *ast.File
-}
-
-// TargetPackage :
-func TargetPackage(prog *loader.Program, req *Req) error {
-	from := prog.Package(req.FromPkg)
-	if from == nil {
-		return errors.Errorf("not found pkg %s", req.FromPkg)
-	}
-
-	to := prog.Package(req.ToPkg)
-	var pkgname string
-	if to != nil {
-		pkgname = to.Pkg.Name()
-	} else {
-		elems := strings.Split(req.ToPkg, "/")
-		pkgname = elems[len(elems)-1]
-	}
-
-	for _, f := range from.Files {
-		f := f
-		f.Name.Name = pkgname
-		k := prog.Fset.File(f.Pos())
-		req.WillBeWrite[k] = &PreWrite{
-			Pkg:  from.Pkg,
-			File: f,
-		}
-	}
-	return nil
-}
 
 // AffectedPackages :
 func AffectedPackages(prog *loader.Program, req *Req) error {
