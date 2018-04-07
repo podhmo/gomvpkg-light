@@ -9,13 +9,14 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/podhmo/gomvpkg-light/build"
 	"github.com/podhmo/gomvpkg-light/collect"
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/loader"
 )
 
 // AffectedPackages :
-func AffectedPackages(prog *loader.Program, req *Req) error {
+func AffectedPackages(ctxt *build.Context, prog *loader.Program, req *Req) error {
 	/*
 		memo(TODO):
 				- unnamed import -> need to replace
@@ -40,6 +41,7 @@ func AffectedPackages(prog *loader.Program, req *Req) error {
 	}
 
 	m := &mover{
+		ctxt:    ctxt,
 		prog:    prog,
 		req:     req,
 		frompkg: frompkg,
@@ -54,6 +56,7 @@ func AffectedPackages(prog *loader.Program, req *Req) error {
 }
 
 type mover struct {
+	ctxt    *build.Context
 	prog    *loader.Program
 	req     *Req
 	frompkg *types.Package
@@ -82,6 +85,8 @@ func (m *mover) apply(a *collect.Affected) error {
 		}
 
 		importName := m.frompkg.Name()
+		var rewriteImportCandidates []string
+
 		for _, is := range f.Imports {
 			path, err := strconv.Unquote(is.Path.Value)
 			if err != nil {
@@ -91,6 +96,9 @@ func (m *mover) apply(a *collect.Affected) error {
 				if is.Name != nil {
 					importName = is.Name.Name
 				}
+			}
+			if m.ctxt.MatchPkg(m.frompkg.Path(), path) {
+				rewriteImportCandidates = append(rewriteImportCandidates, path)
 			}
 		}
 
@@ -121,7 +129,10 @@ func (m *mover) apply(a *collect.Affected) error {
 			})
 
 		}
-		astutil.RewriteImport(fset, f, m.frompkg.Path(), m.topkg.Path())
+
+		for _, path := range rewriteImportCandidates {
+			astutil.RewriteImport(fset, f, path, strings.Replace(path, m.frompkg.Path(), m.topkg.Path(), 1))
+		}
 
 		k := fset.File(f.Pos())
 		m.req.WillBeWrite[k] = &PreWrite{

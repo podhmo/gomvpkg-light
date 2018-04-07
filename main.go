@@ -106,7 +106,7 @@ func run(ctxt *build.Context, option *option) error {
 		return err
 	}
 
-	if err := move.AffectedPackages(prog, req); err != nil {
+	if err := move.AffectedPackages(ctxt, prog, req); err != nil {
 		return err
 	}
 

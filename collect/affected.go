@@ -58,7 +58,7 @@ func AffectedPackages(ctxt *build.Context, srcpkg string, root *Target, pkgdirs 
 					if err != nil {
 						log.Println(f.Name(), err)
 					}
-					if path == srcpkg {
+					if ctxt.MatchPkg(srcpkg, path) {
 						item.Files = append(item.Files, f.Name())
 						break
 					}
