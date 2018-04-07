@@ -1,14 +1,13 @@
 package collect
 
 import (
-	"go/build"
 	"go/parser"
 	"go/token"
 	"log"
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/buildutil"
+	"github.com/podhmo/gomvpkg-light/build"
 )
 
 // Affected :
@@ -25,7 +24,7 @@ func AffectedPackages(ctxt *build.Context, srcpkg string, root *Target, pkgdirs 
 
 	fset := token.NewFileSet()
 	for _, dir := range pkgdirs {
-		fs, err := buildutil.ReadDir(ctxt, dir)
+		fs, err := ctxt.ReadDir(dir)
 		if err != nil {
 			return nil, err
 		}
@@ -40,7 +39,7 @@ func AffectedPackages(ctxt *build.Context, srcpkg string, root *Target, pkgdirs 
 				continue
 			}
 			func() {
-				r, err := buildutil.OpenFile(ctxt, buildutil.JoinPath(ctxt, dir, f.Name()))
+				r, err := ctxt.OpenFile(ctxt.JoinPath(dir, f.Name()))
 				if err != nil {
 					log.Println(f.Name(), err)
 					return

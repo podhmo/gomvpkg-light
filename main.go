@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go/build"
 	"log"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/podhmo/gomvpkg-light/build"
 	"github.com/podhmo/gomvpkg-light/collect"
 	"github.com/podhmo/gomvpkg-light/move"
 	"golang.org/x/tools/go/loader"
@@ -56,7 +56,9 @@ func main() {
 		return
 	}
 
-	if err := run(&build.Default, *fromFlag, *toFlag, *inFlag); err != nil {
+	ctxt := build.Default()
+
+	if err := run(ctxt, *fromFlag, *toFlag, *inFlag); err != nil {
 		fmt.Fprintf(os.Stderr, "gomvpkg-light: %+v.\n", err)
 		os.Exit(1)
 	}

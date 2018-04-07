@@ -1,10 +1,8 @@
 package collect
 
 import (
-	"go/build"
-
 	"github.com/pkg/errors"
-	"golang.org/x/tools/go/buildutil"
+	"github.com/podhmo/gomvpkg-light/build"
 )
 
 // Target :
@@ -17,8 +15,8 @@ type Target struct {
 // TargetRoot :
 func TargetRoot(ctxt *build.Context, inpkg string) (*Target, error) {
 	for _, dir := range ctxt.SrcDirs() {
-		path := buildutil.JoinPath(ctxt, dir, inpkg)
-		if buildutil.IsDir(ctxt, path) {
+		path := ctxt.JoinPath(dir, inpkg)
+		if ctxt.IsDir(path) {
 			return &Target{
 				Dir:  dir,
 				Path: path,

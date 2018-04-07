@@ -1,11 +1,10 @@
 package collect
 
 import (
-	"go/build"
 	"strings"
 
 	"github.com/pkg/errors"
-	"golang.org/x/tools/go/buildutil"
+	"github.com/podhmo/gomvpkg-light/build"
 )
 
 // GoFilesDirectories finds go package in inpkg
@@ -17,7 +16,7 @@ func GoFilesDirectories(ctxt *build.Context, root *Target) ([]string, error) {
 		dir := q[0]
 		q = q[1:]
 
-		fs, err := buildutil.ReadDir(ctxt, dir)
+		fs, err := ctxt.ReadDir(dir)
 		if err != nil {
 			return nil, errors.Wrap(err, "collect go files directories")
 		}
@@ -25,7 +24,7 @@ func GoFilesDirectories(ctxt *build.Context, root *Target) ([]string, error) {
 		used := false
 		for _, f := range fs {
 			if f.IsDir() {
-				q = append(q, buildutil.JoinPath(ctxt, dir, f.Name()))
+				q = append(q, ctxt.JoinPath(dir, f.Name()))
 				continue
 			}
 			if used {
