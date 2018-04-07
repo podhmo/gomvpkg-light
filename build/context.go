@@ -21,6 +21,9 @@ func Default() *Context {
 			return os.MkdirAll(path, 0744)
 		},
 		MoveFile: func(src, dst string) error {
+			if err := os.Chdir(src); err != nil {
+				return err
+			}
 			return exec.Command("git", "mv", src, dst).Run()
 		},
 	}
