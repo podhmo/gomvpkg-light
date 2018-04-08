@@ -1,0 +1,151 @@
+$ time make light
+cd /home/nao/go/src/github.com/podhmo/gomvpkg-light; 	go install -v
+cd /home/nao/go/src/github.com/xxx/myapp; 	git reset --hard
+HEAD is now at d6288065 xxx
+gomvpkg-light --in github.com/xxx/myapp --from github.com/xxx/myapp/model --to github.com/xxx/myapp/model2 --disable-gc
+2018/04/08 23:22:43 start move package github.com/xxx/myapp/model -> github.com/xxx/myapp/model2
+2018/04/08 23:22:43 get in-pkg /home/nao/go/src/github.com/xxx/myapp
+2018/04/08 23:22:43 collect candidate directories 683
+2018/04/08 23:22:43 collect affected packages 132
+2018/04/08 23:22:43 loading packages..
+2018/04/08 23:22:47 599 packages are loaded
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=34
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=31
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=9
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=4
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=86
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=6
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=12
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=32
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=15
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=5
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=8
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=4
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=4
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=5
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=12
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=5
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=13
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=5
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=43
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=12
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=11
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=4
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=4
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=5
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=9
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=20
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=6
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=19
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=5
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=20
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=6
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=2
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=4
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=3
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 write github.com/xxx/myapp/xxxxx, files=1
+2018/04/08 23:22:48 move package github.com/xxx/myapp/model -> github.com/xxx/myapp/model2
+2018/04/08 23:22:48 takes 4.952462621s
+2018/04/08 23:22:48 end
+
+real	0m5.283s
+user	0m11.218s
+sys	0m3.536s
