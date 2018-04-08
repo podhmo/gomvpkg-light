@@ -123,6 +123,7 @@ func run(ctxt *build.Context, option *option) error {
 	if err != nil {
 		return err
 	}
+    log.Printf("%d packages are loaded", len(prog.AllPackages))
 
 	req := &move.Req{
 		FromPkg:     option.fromPkg,
