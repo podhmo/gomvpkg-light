@@ -1,6 +1,10 @@
 PKG = github.com/podhmo/handwriting
 
-default:
+light:
 	go install -v .
-	gomvpkg-light --from $(PKG)/generator/deriving --to $(PKG)/deriving2 --in $(PKG)
-	# gomvpkg -from $(PKG)/generator/deriving -to $(PKG)/deriving2
+	cd $(GOPATH)/src/$(PKG); rm -rf deriving2; git reset --hard HEAD
+	gomvpkg-light --from $(PKG)/generator/deriving --to $(PKG)/deriving2 --in $(PKG) --disable-gc
+
+original:
+	cd $(GOPATH)/src/$(PKG); rm -rf deriving2; git reset --hard HEAD
+	gomvpkg -from $(PKG)/generator/deriving -to $(PKG)/deriving2
