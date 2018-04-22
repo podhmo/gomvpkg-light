@@ -33,6 +33,7 @@ type option struct {
 
 	disableGC bool
 	unsafe    bool
+	verbose   bool
 }
 
 func main() {
@@ -47,6 +48,7 @@ func main() {
 	cmd.Flag("profile", "profile").StringVar(&option.fProfile)
 	cmd.Flag("disable-gc", "disable gc (for speed)").BoolVar(&option.disableGC)
 	cmd.Flag("unsafe", "unsafe option (for speed)").BoolVar(&option.unsafe)
+	cmd.Flag("verbose", "verbose").Short('v').BoolVar(&option.verbose)
 
 	if _, err := cmd.Parse(os.Args[1:]); err != nil {
 		cmd.FatalUsage(err.Error())
@@ -118,7 +120,7 @@ func run(ctxt *build.Context, option *option) error {
 
 	if option.unsafe {
 		log.Println("unsafe option is enabled, aggressive optimization")
-		unsafeOptimization(&c, option.fromPkg, affected)
+		unsafeOptimization(&c, option, affected)
 	}
 
 	c.ImportWithTests(option.fromPkg)
@@ -140,6 +142,7 @@ func run(ctxt *build.Context, option *option) error {
 		Root:        root,
 		Affected:    affected,
 		WillBeWrite: map[*token.File]*move.PreWrite{},
+		Verbose:     option.verbose,
 	}
 
 	// todo: check
@@ -177,7 +180,9 @@ func run(ctxt *build.Context, option *option) error {
 		if err := ctxt.WriteFile(f.Name(), b.Bytes()); err != nil {
 			return err
 		}
-		// log.Printf("write file %s", f.Name())
+		if option.verbose {
+			log.Printf("write file %s", f.Name())
+		}
 		stat[pw.Pkg]++
 	}
 	for pkg, count := range stat {
@@ -197,10 +202,14 @@ func run(ctxt *build.Context, option *option) error {
 	return nil
 }
 
-func unsafeOptimization(c *loader.Config, frompkg string, affected []collect.Affected) {
+func unsafeOptimization(c *loader.Config, option *option, affected []collect.Affected) {
+	if !option.verbose {
+		c.TypeChecker.Error = func(e error) {} // silent
+	}
+
 	c.AllowErrors = true
 	shallowImports := map[string]bool{
-		frompkg: true,
+		option.fromPkg: true,
 	}
 	for _, a := range affected {
 		shallowImports[a.Pkg] = true

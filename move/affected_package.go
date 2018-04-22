@@ -114,7 +114,9 @@ func (m *mover) apply(a *collect.Affected) error {
 				if t, _ := node.(*ast.SelectorExpr); t != nil {
 					ob := info.ObjectOf(t.Sel)
 					if ob == nil {
-						log.Printf("affected package, inspect, %q is nil (in %s/%s)", t.Sel, a.Pkg, fname)
+						if m.req.Verbose {
+							log.Printf("affected package, inspect, %q is nil (in %s/%s)", t.Sel, a.Pkg, fname)
+						}
 						return true
 					}
 					pkg := ob.Pkg()
