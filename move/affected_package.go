@@ -112,7 +112,12 @@ func (m *mover) apply(a *collect.Affected) error {
 		if !skip {
 			ast.Inspect(f, func(node ast.Node) bool {
 				if t, _ := node.(*ast.SelectorExpr); t != nil {
-					pkg := info.ObjectOf(t.Sel).Pkg()
+					ob := info.ObjectOf(t.Sel)
+					if ob == nil {
+						log.Printf("affected package, inspect, %q is nil (in %s/%s)", t.Sel, a.Pkg, fname)
+						return true
+					}
+					pkg := ob.Pkg()
 					if m.frompkg == pkg || info.Pkg == pkg { // xxx: for embeded (info.Pkg == pkg)
 						ast.Inspect(t.X, func(node ast.Node) bool {
 							if ident, _ := node.(*ast.Ident); ident != nil {
