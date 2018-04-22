@@ -29,8 +29,10 @@ type option struct {
 
 	only bool
 
-	fProfile  string
+	fProfile string
+
 	disableGC bool
+	unsafe    bool
 }
 
 func main() {
@@ -44,12 +46,13 @@ func main() {
 
 	cmd.Flag("profile", "profile").StringVar(&option.fProfile)
 	cmd.Flag("disable-gc", "disable gc (for speed)").BoolVar(&option.disableGC)
+	cmd.Flag("unsafe", "unsafe option (for speed)").BoolVar(&option.unsafe)
 
 	if _, err := cmd.Parse(os.Args[1:]); err != nil {
 		cmd.FatalUsage(err.Error())
 	}
 
-	if option.disableGC {
+	if option.disableGC || option.unsafe {
 		debug.SetGCPercent(-1)
 	}
 
@@ -111,6 +114,11 @@ func run(ctxt *build.Context, option *option) error {
 			return true
 		},
 		ParserMode: parser.ParseComments,
+	}
+
+	if option.unsafe {
+		log.Println("unsafe option is enabled, aggressive optimization")
+		unsafeOptimization(&c, option.fromPkg, affected)
 	}
 
 	c.ImportWithTests(option.fromPkg)
@@ -187,4 +195,30 @@ func run(ctxt *build.Context, option *option) error {
 		return err
 	}
 	return nil
+}
+
+func unsafeOptimization(c *loader.Config, frompkg string, affected []collect.Affected) {
+	c.AllowErrors = true
+	shallowImports := map[string]bool{
+		frompkg: true,
+	}
+	for _, a := range affected {
+		shallowImports[a.Pkg] = true
+		for k := range a.ShallowImports {
+			shallowImports[k] = true
+		}
+	}
+
+	c.FindPackage = func(ctxt *build.OriginalContext, importPath, fromDir string, mode build.ImportMode) (*build.Package, error) {
+		if _, ok := shallowImports[importPath]; !ok {
+			bp := &build.Package{
+				ImportPath: importPath,
+			}
+			err := &build.NoGoError{
+				Dir: importPath,
+			}
+			return bp, err
+		}
+		return ctxt.Import(importPath, fromDir, mode)
+	}
 }
