@@ -16,6 +16,7 @@ type Req struct {
 	Root        *collect.Target
 	Affected    []collect.Affected
 	WillBeWrite map[*token.File]*PreWrite
+	Verbose     bool
 }
 
 // PreWrite :

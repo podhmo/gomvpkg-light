@@ -12,10 +12,11 @@ import (
 
 // Affected :
 type Affected struct {
-	Dir   string
-	Name  string
-	Pkg   string
-	Files []string
+	Dir            string
+	Name           string
+	Pkg            string
+	Files          []string
+	ShallowImports map[string]bool
 }
 
 // AffectedPackages :
@@ -30,8 +31,9 @@ func AffectedPackages(ctxt *build.Context, srcpkg string, root *Target, pkgdirs 
 		}
 
 		item := Affected{
-			Dir: dir,
-			Pkg: dir[len(root.Dir)+1:],
+			Dir:            dir,
+			Pkg:            dir[len(root.Dir)+1:],
+			ShallowImports: map[string]bool{},
 		}
 
 		for _, f := range fs {
@@ -62,6 +64,7 @@ func AffectedPackages(ctxt *build.Context, srcpkg string, root *Target, pkgdirs 
 						item.Files = append(item.Files, f.Name())
 						break
 					}
+					item.ShallowImports[path] = true
 				}
 			}()
 		}
