@@ -55,6 +55,7 @@ func main() {
 	}
 
 	if option.disableGC || option.unsafe {
+		log.Println("gc is disabled")
 		debug.SetGCPercent(-1)
 	}
 
