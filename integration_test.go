@@ -37,7 +37,7 @@ func fakeContext(pkgs map[string][]string) *build.OriginalContext {
 	}
 	ctxt := buildutil.FakeContext(pkgs2)
 
-	// fix readdir
+	// fix golang.org/x/tools/go/buildutil/fakecontext.go's readdir
 	originalReadDir := ctxt.ReadDir
 	clean := func(filename string) string {
 		f := path.Clean(filepath.ToSlash(filename))
@@ -55,7 +55,7 @@ func fakeContext(pkgs map[string][]string) *build.OriginalContext {
 			if pkgname == pkg {
 				continue
 			}
-			if strings.HasPrefix(pkgname, pkg) {
+			if strings.HasPrefix(pkgname, pkg+"/") {
 				fis = append(fis, fakeDirInfo(strings.TrimPrefix(pkgname, pkg)))
 			}
 		}
@@ -67,13 +67,12 @@ func fakeContext(pkgs map[string][]string) *build.OriginalContext {
 func TestMoves(t *testing.T) {
 	// from: golang.org/x/tools/refactor/rename/mvpkg_test.go
 	tests := []struct {
-		msg          string
 		ctxt         *build.OriginalContext
 		from, to, in string
 		want         map[string]string
 	}{
+		// Simple example.
 		{
-			msg: "Simple example",
 			ctxt: fakeContext(map[string][]string{
 				"foo": {`package foo; type T int`},
 				"bar": {`package bar`},
@@ -98,8 +97,9 @@ type T int
 `,
 			},
 		},
+
+		// Example with subpackage.
 		{
-			msg: "Example with subpackage",
 			ctxt: fakeContext(map[string][]string{
 				"foo":     {`package foo; type T int`},
 				"foo/sub": {`package sub; type T int`},
@@ -129,8 +129,9 @@ type T int
 				"/go/src/bar/sub/0.go": `package sub; type T int`,
 			},
 		},
+
+		// References into subpackages
 		{
-			msg: "References into subpackages",
 			ctxt: fakeContext(map[string][]string{
 				"foo":   {`package foo; import "foo/a"; var _ a.T`},
 				"foo/a": {`package a; type T int`},
@@ -153,84 +154,101 @@ var _ a.T
 `,
 			},
 		},
+
+		// References into subpackages where directories have overlapped names
+		{
+			ctxt: fakeContext(map[string][]string{
+				"foo":    {},
+				"foo/a":  {`package a`},
+				"foo/aa": {`package bar`},
+				"foo/c":  {`package c; import _ "foo/bar";`},
+			}),
+			from: "foo/a", to: "foo/spam", in: "foo",
+			want: map[string]string{
+				"/go/src/foo/spam/0.go": `package spam
+`,
+				"/go/src/foo/aa/0.go": `package bar`,
+				"/go/src/foo/c/0.go":  `package c; import _ "foo/bar";`,
+			},
+		},
 	}
 	for _, test := range tests {
 		test := test
-		t.Run(test.msg, func(t *testing.T) {
-			ctxt := build.Recursively()
-			ctxt.Ctxt = test.ctxt
+		ctxt := build.Recursively()
+		ctxt.Ctxt = test.ctxt
 
-			got := make(map[string]string)
-			// Populate got with starting file set. rewriteFile and moveDirectory
-			// will mutate got to produce resulting file set.
-			buildutil.ForEachPackage(test.ctxt, func(importPath string, err error) {
-				if err != nil {
-					return
-				}
-				path := filepath.Join("/go/src", importPath, "0.go")
-				if !buildutil.FileExists(test.ctxt, path) {
-					return
-				}
-				f, err := test.ctxt.OpenFile(path)
-				if err != nil {
-					t.Errorf("unexpected error opening file: %s", err)
-					return
-				}
-				bytes, err := ioutil.ReadAll(f)
-				f.Close()
-				if err != nil {
-					t.Errorf("unexpected error reading file: %s", err)
-					return
-				}
-				got[path] = string(bytes)
-			})
-
-			ctxt.WriteFile = func(filename string, content []byte) error {
-				got[filename] = string(content)
-				return nil
-			}
-			ctxt.MkdirAll = func(path string) error {
-				return nil
-			}
-			ctxt.MoveFile = func(from, to string) error {
-				for path, contents := range got {
-					if strings.HasPrefix(path, from) {
-						newPath := strings.Replace(path, from, to, 1)
-						delete(got, path)
-						got[newPath] = contents
-					}
-				}
-				return nil
-			}
-
-			err := run(ctxt, &option{fromPkg: test.from, toPkg: test.to, inPkg: test.in})
-			prefix := fmt.Sprintf("-from %q -to %q", test.from, test.to)
-
+		got := make(map[string]string)
+		// Populate got with starting file set. rewriteFile and moveDirectory
+		// will mutate got to produce resulting file set.
+		buildutil.ForEachPackage(test.ctxt, func(importPath string, err error) {
 			if err != nil {
-				t.Errorf("%s: unexpected error: %s", prefix, err)
 				return
 			}
-
-			for file, wantContent := range test.want {
-				k := filepath.FromSlash(file)
-				gotContent, ok := got[k]
-				delete(got, k)
-				if !ok {
-					// TODO(matloob): some testcases might have files that won't be
-					// rewritten
-					t.Errorf("%s: file %s not rewritten", prefix, file)
-					return
-				}
-				if gotContent != wantContent {
-					t.Errorf("%s: rewritten file %s does not match expectation; got <<<%s>>>\n"+
-						"want <<<%s>>>", prefix, file, gotContent, wantContent)
-				}
+			path := filepath.Join("/go/src", importPath, "0.go")
+			if !buildutil.FileExists(test.ctxt, path) {
+				return
 			}
-
-			// got should now be empty
-			for file := range got {
-				t.Errorf("%s: unexpected rewrite of file %s", prefix, file)
+			f, err := test.ctxt.OpenFile(path)
+			if err != nil {
+				t.Errorf("unexpected error opening file: %s", err)
+				return
 			}
+			bytes, err := ioutil.ReadAll(f)
+			f.Close()
+			if err != nil {
+				t.Errorf("unexpected error reading file: %s", err)
+				return
+			}
+			got[path] = string(bytes)
 		})
+
+		ctxt.WriteFile = func(filename string, content []byte) error {
+			got[filename] = string(content)
+			return nil
+		}
+		ctxt.MkdirAll = func(path string) error {
+			return nil
+		}
+		ctxt.MoveFile = func(from, to string) error {
+			for path, contents := range got {
+				if !(strings.HasPrefix(path, from) &&
+					(len(path) == len(from) || path[len(from)] == filepath.Separator)) {
+					continue
+				}
+				newPath := strings.Replace(path, from, to, 1)
+				delete(got, path)
+				got[newPath] = contents
+			}
+			return nil
+		}
+
+		err := run(ctxt, &option{fromPkg: test.from, toPkg: test.to, inPkg: test.in})
+		prefix := fmt.Sprintf("-from %q -to %q", test.from, test.to)
+
+		if err != nil {
+			t.Errorf("%s: unexpected error: %s", prefix, err)
+			continue
+		}
+
+		for file, wantContent := range test.want {
+			k := filepath.FromSlash(file)
+			gotContent, ok := got[k]
+			delete(got, k)
+			if !ok {
+				// TODO(matloob): some testcases might have files that won't be
+				// rewritten
+				t.Errorf("%s: file %s not rewritten", prefix, file)
+				continue
+			}
+			if gotContent != wantContent {
+				t.Errorf("%s: rewritten file %s does not match expectation; got <<<%s>>>\n"+
+					"want <<<%s>>>", prefix, file, gotContent, wantContent)
+			}
+		}
+
+		// got should now be empty
+		for file := range got {
+			t.Errorf("%s: unexpected rewrite of file %s", prefix, file)
+		}
 	}
 }
