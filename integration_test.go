@@ -3,13 +3,25 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/podhmo/gomvpkg-light/build"
 	"golang.org/x/tools/go/buildutil"
 )
+
+type fakeDirInfo string
+
+func (fd fakeDirInfo) Name() string    { return string(fd) }
+func (fakeDirInfo) Sys() interface{}   { return nil }
+func (fakeDirInfo) ModTime() time.Time { return time.Time{} }
+func (fakeDirInfo) IsDir() bool        { return true }
+func (fakeDirInfo) Size() int64        { return 0 }
+func (fakeDirInfo) Mode() os.FileMode  { return 0755 }
 
 // Simplifying wrapper around buildutil.FakeContext for packages whose
 // filenames are sequentially numbered (%d.go).  pkgs maps a package
@@ -23,7 +35,33 @@ func fakeContext(pkgs map[string][]string) *build.OriginalContext {
 		}
 		pkgs2[path] = filemap
 	}
-	return buildutil.FakeContext(pkgs2)
+	ctxt := buildutil.FakeContext(pkgs2)
+
+	// fix readdir
+	originalReadDir := ctxt.ReadDir
+	clean := func(filename string) string {
+		f := path.Clean(filepath.ToSlash(filename))
+		// Removing "/go/src" while respecting segment
+		// boundaries has this unfortunate corner case:
+		if f == "/go/src" {
+			return ""
+		}
+		return strings.TrimPrefix(f, "/go/src/")
+	}
+	ctxt.ReadDir = func(dir string) ([]os.FileInfo, error) {
+		fis, err := originalReadDir(dir)
+		pkg := clean(dir)
+		for pkgname := range pkgs {
+			if pkgname == pkg {
+				continue
+			}
+			if strings.HasPrefix(pkgname, pkg) {
+				fis = append(fis, fakeDirInfo(strings.TrimPrefix(pkgname, pkg)))
+			}
+		}
+		return fis, err
+	}
+	return ctxt
 }
 
 func TestMoves(t *testing.T) {
@@ -89,6 +127,30 @@ var _ sub.T
 type T int
 `,
 				"/go/src/bar/sub/0.go": `package sub; type T int`,
+			},
+		},
+		{
+			msg: "References into subpackages",
+			ctxt: fakeContext(map[string][]string{
+				"foo":   {`package foo; import "foo/a"; var _ a.T`},
+				"foo/a": {`package a; type T int`},
+				"foo/b": {`package b; import "foo/a"; var _ a.T`},
+			}),
+			from: "foo", to: "bar", in: "foo",
+			want: map[string]string{
+				"/go/src/bar/0.go": `package bar
+
+import "bar/a"
+
+var _ a.T
+`,
+				"/go/src/bar/a/0.go": `package a; type T int`,
+				"/go/src/bar/b/0.go": `package b
+
+import "bar/a"
+
+var _ a.T
+`,
 			},
 		},
 	}
@@ -164,11 +226,11 @@ type T int
 						"want <<<%s>>>", prefix, file, gotContent, wantContent)
 				}
 			}
+
 			// got should now be empty
 			for file := range got {
 				t.Errorf("%s: unexpected rewrite of file %s", prefix, file)
 			}
-
 		})
 	}
 }
