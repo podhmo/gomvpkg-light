@@ -35,6 +35,11 @@ func fakeContext(pkgs map[string][]string) *build.OriginalContext {
 		}
 		pkgs2[path] = filemap
 	}
+	return FakeContext(pkgs2)
+}
+
+// FakeContext : replacement for buildutil.FakeContext
+func FakeContext(pkgs2 map[string]map[string]string) *build.OriginalContext {
 	ctxt := buildutil.FakeContext(pkgs2)
 
 	// fix golang.org/x/tools/go/buildutil/fakecontext.go's readdir
@@ -51,7 +56,7 @@ func fakeContext(pkgs map[string][]string) *build.OriginalContext {
 	ctxt.ReadDir = func(dir string) ([]os.FileInfo, error) {
 		fis, err := originalReadDir(dir)
 		pkg := clean(dir)
-		for pkgname := range pkgs {
+		for pkgname := range pkgs2 {
 			if pkgname == pkg {
 				continue
 			}
@@ -169,6 +174,38 @@ var _ a.T
 `,
 				"/go/src/foo/aa/0.go": `package bar`,
 				"/go/src/foo/c/0.go":  `package c; import _ "foo/bar";`,
+			},
+		},
+
+		// External test packages
+		{
+			ctxt: FakeContext(map[string]map[string]string{
+				"foo": {
+					"0.go":      `package foo; type T int`,
+					"0_test.go": `package foo_test; import "foo"; var _ foo.T`,
+				},
+				"baz": {
+					"0_test.go": `package baz_test; import "foo"; var _ foo.T`,
+				},
+			}),
+			from: "foo", to: "bar", in: "",
+			want: map[string]string{
+				"/go/src/bar/0.go": `package bar
+
+type T int
+`,
+				"/go/src/bar/0_test.go": `package bar_test
+
+import "bar"
+
+var _ bar.T
+`,
+				"/go/src/baz/0_test.go": `package baz_test
+
+import "bar"
+
+var _ bar.T
+`,
 			},
 		},
 	}
