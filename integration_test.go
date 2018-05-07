@@ -291,6 +291,31 @@ type B int
 			// 	`/go/src/conflict/0.go:3:8: skipping update of this file`,
 			// },
 		},
+		// Rename with same base name.
+		{
+			ctxt: fakeContext(map[string][]string{
+				"x": {},
+				"y": {},
+				"x/foo": {`package foo
+
+type T int
+`},
+				"main": {`package main; import "x/foo"; var _ foo.T`},
+			}),
+			from: "x/foo", to: "y/foo", in: "",
+			want: map[string]string{
+				"/go/src/y/foo/0.go": `package foo
+
+type T int
+`,
+				"/go/src/main/0.go": `package main
+
+import "y/foo"
+
+var _ foo.T
+`,
+			},
+		},
 	}
 	for _, test := range tests {
 		test := test
