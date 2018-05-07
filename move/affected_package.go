@@ -87,24 +87,45 @@ func (m *mover) apply(a *collect.Affected) error {
 		importName := m.frompkg.Name()
 		var rewriteImportCandidates []string
 
+		seen := map[string][]string{}
+
 		for _, is := range f.Imports {
+			var name string
+
 			path, err := strconv.Unquote(is.Path.Value)
 			if err != nil {
 				return errors.Errorf("invalid path %s, in %q", err, fname)
 			}
-			if path == m.frompkg.Path() {
-				if is.Name != nil {
+
+			if is.Name != nil {
+				name = is.Name.Name
+				if path == m.frompkg.Path() {
 					importName = is.Name.Name
 				}
+			} else {
+				items := strings.Split(path, "/")
+				name = items[len(items)-1]
 			}
+
 			if m.ctxt.MatchPkg(m.frompkg.Path(), path) {
 				rewriteImportCandidates = append(rewriteImportCandidates, path)
+				if m.frompkg.Path() == path {
+					name = m.topkg.Name()
+				}
+				seen[name] = append(seen[name], strings.Replace(path, m.frompkg.Path(), m.topkg.Path(), 1))
+			} else {
+				seen[name] = append(seen[name], path)
 			}
 		}
 
 		skip := false
 
 		if importName != m.frompkg.Name() {
+			skip = true
+		}
+
+		if vs, _ := seen[m.topkg.Name()]; len(vs) > 1 {
+			log.Printf("conflict: %s in (in %s/%s)", vs, a.Pkg, fname)
 			skip = true
 		}
 
