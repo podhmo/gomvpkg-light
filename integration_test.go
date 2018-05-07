@@ -245,6 +245,52 @@ var _ bar.T
 /* import " this is not an import comment */
 `},
 		},
+		// Import name conflict generates a warning, not an error.
+		{
+			ctxt: fakeContext(map[string][]string{
+				"x": {},
+				"a": {`package a; type A int`},
+				"b": {`package b; type B int`},
+				"conflict": {`package conflict
+
+import "a"
+import "b"
+var _ a.A
+var _ b.B
+`},
+				"ok": {`package ok
+import "b"
+var _ b.B
+`},
+			}),
+			from: "b", to: "x/a", in: "",
+			want: map[string]string{
+				"/go/src/a/0.go": `package a; type A int`,
+				"/go/src/ok/0.go": `package ok
+
+import "x/a"
+
+var _ a.B
+`,
+				"/go/src/conflict/0.go": `package conflict
+
+import "a"
+import "x/a"
+
+var _ a.A
+var _ b.B
+`,
+				"/go/src/x/a/0.go": `package a
+
+type B int
+`,
+			},
+			// wantWarnings: []string{
+			// 	`/go/src/conflict/0.go:4:8: renaming this imported package name "b" to "a"`,
+			// 	`/go/src/conflict/0.go:3:8: 	conflicts with imported package name in same block`,
+			// 	`/go/src/conflict/0.go:3:8: skipping update of this file`,
+			// },
+		},
 	}
 	for _, test := range tests {
 		test := test
