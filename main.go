@@ -100,6 +100,7 @@ func run(ctxt *build.Context, option *option) error {
 	log.Printf("collect candidate directories %d", len(pkgdirs))
 
 	affected, err := collect.AffectedPackages(ctxt, option.fromPkg, root, pkgdirs)
+
 	if err != nil {
 		return err
 	}
@@ -107,6 +108,7 @@ func run(ctxt *build.Context, option *option) error {
 
 	// slow
 	c := loader.Config{
+		Build: ctxt.Ctxt,
 		TypeCheckFuncBodies: func(path string) bool {
 			if !strings.HasPrefix(path, root.Pkg) {
 				return false
@@ -126,6 +128,10 @@ func run(ctxt *build.Context, option *option) error {
 
 	c.ImportWithTests(option.fromPkg)
 	for _, a := range affected {
+		if a.IsXTest {
+			c.ImportWithTests(strings.TrimSuffix(a.Pkg, "_test"))
+			continue
+		}
 		c.ImportWithTests(a.Pkg)
 	}
 
@@ -149,6 +155,15 @@ func run(ctxt *build.Context, option *option) error {
 	// todo: check
 	if err := move.TargetPackage(prog, req); err != nil {
 		return err
+	}
+	// xtest
+	if prog.Package(req.FromPkg+"_test") != nil {
+		xreq := *req
+		xreq.FromPkg = req.FromPkg + "_test"
+		xreq.ToPkg = req.ToPkg + "_test"
+		if err := move.TargetPackage(prog, &xreq); err != nil {
+			return err
+		}
 	}
 
 	if err := move.AffectedPackages(ctxt, prog, req); err != nil {
