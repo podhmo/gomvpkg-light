@@ -2,6 +2,7 @@ package move
 
 import (
 	"go/ast"
+	"go/token"
 	"go/types"
 	"log"
 	"path/filepath"
@@ -11,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/podhmo/gomvpkg-light/build"
 	"github.com/podhmo/gomvpkg-light/collect"
-	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/loader"
 )
 
@@ -159,7 +159,13 @@ func (m *mover) apply(a *collect.Affected) error {
 		}
 
 		for _, path := range rewriteImportCandidates {
-			astutil.RewriteImport(fset, f, path, strings.Replace(path, m.frompkg.Path(), m.topkg.Path(), 1))
+			rewriteImport(fset, f, path, strings.Replace(path, m.frompkg.Path(), m.topkg.Path(), 1), func(imp *ast.ImportSpec) {
+				if imp.Name != nil {
+					if imp.Name.Name == importName {
+						imp.Name.Name = m.topkg.Name()
+					}
+				}
+			})
 		}
 
 		k := fset.File(f.Pos())
@@ -169,4 +175,27 @@ func (m *mover) apply(a *collect.Affected) error {
 		}
 	}
 	return nil
+}
+
+func importPath(s *ast.ImportSpec) string {
+	t, err := strconv.Unquote(s.Path.Value)
+	if err == nil {
+		return t
+	}
+	return ""
+}
+
+// rewriteImport rewrites any import of path oldPath to path newPath.
+func rewriteImport(fset *token.FileSet, f *ast.File, oldPath, newPath string, cont func(imp *ast.ImportSpec)) (rewrote bool) {
+	for _, imp := range f.Imports {
+		if importPath(imp) == oldPath {
+			rewrote = true
+			// record old End, because the default is to compute
+			// it using the length of imp.Path.Value.
+			imp.EndPos = imp.End()
+			imp.Path.Value = strconv.Quote(newPath)
+			cont(imp)
+		}
+	}
+	return
 }

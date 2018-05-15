@@ -316,6 +316,37 @@ var _ foo.T
 `,
 			},
 		},
+		// custom test
+		{
+			ctxt: fakeContext(map[string][]string{
+				"x": {},
+				"y": {},
+				"x/foo": {`package foo
+
+type T int
+`},
+				"main": {`package main
+import (
+	foo "x/foo"
+)
+var _ foo.T`},
+			}),
+			from: "x/foo", to: "y/bar", in: "",
+			want: map[string]string{
+				"/go/src/y/bar/0.go": `package bar
+
+type T int
+`,
+				"/go/src/main/0.go": `package main
+
+import (
+	bar "y/bar"
+)
+
+var _ bar.T
+`,
+			},
+		},
 	}
 	for _, test := range tests {
 		test := test
