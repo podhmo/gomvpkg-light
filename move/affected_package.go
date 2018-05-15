@@ -186,7 +186,7 @@ func importPath(s *ast.ImportSpec) string {
 }
 
 // rewriteImport rewrites any import of path oldPath to path newPath.
-func rewriteImport(fset *token.FileSet, f *ast.File, oldPath, newPath string, conts ...func(imp *ast.ImportSpec)) (rewrote bool) {
+func rewriteImport(fset *token.FileSet, f *ast.File, oldPath, newPath string, cont func(imp *ast.ImportSpec)) (rewrote bool) {
 	for _, imp := range f.Imports {
 		if importPath(imp) == oldPath {
 			rewrote = true
@@ -194,9 +194,7 @@ func rewriteImport(fset *token.FileSet, f *ast.File, oldPath, newPath string, co
 			// it using the length of imp.Path.Value.
 			imp.EndPos = imp.End()
 			imp.Path.Value = strconv.Quote(newPath)
-			for _, cont := range conts {
-				cont(imp)
-			}
+			cont(imp)
 		}
 	}
 	return
